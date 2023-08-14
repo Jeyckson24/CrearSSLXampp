@@ -1,0 +1,85 @@
+Cómo crear SSL válido en localhost para XAMPP + red local
+Las actualizaciones del navegador Chrome se han convertido en un obstáculo para el desarrollo local. No solo decidieron deshabilitar el dominio .dev para el desarrollo local, sino que también tienen una configuración específica en el certificado SSL para mostrar el sitio como seguro. Y otros frameworks y aplicaciones ya no establecen conexiones con http sin ssl.
+
+En este tutorial paso a paso, intentaré explicar como crear un certificado SSL localmente para usarlo en XAMPP, probado en Windows 7 y Windows 10.
+
+En mi instalación de XAMPP, básicamente tengo un clon de todos los sitios que administro. Y todos ellos (por supuesto) usan SSL / HTTPS.
+
+Aquí está la guía paso a paso:
+En este paso vamos a crear SSL y configurar el sitio web «site.test».
+
+1. Navega al directorio de Apache en XAMPP.
+En una instalación normal, está en C:\xampp\apache.
+
+2. Crea una carpeta nueva
+Aquí es donde almacenaremos nuestro certificado. En este ejemplo, crearé la carpeta «crt».
+Entonces tendremos C:\xampp\apache\crt
+
+3. Agrega estos archivos
+Descarga estos archivos a la carpeta que hemos creado «C:\xampp\apache\crt«.
+
+cert.conf
+make-cert.bat
+4. Edita cert.conf y ejecuta make-cert.bat
+Abre el archivo cert.conf en un editor de texto plano o block de notas. Cambia el campo o texto de {{DOMAIN}} usando el dominio que queremos, en este caso site.test o el que prefieras y guardar.
+
+Haz doble clic en make-cert.bat e ingresa el dominio site.test cuando se te solicite. Y simplemente dale ENTER en las preguntas, ya que ya configuramos el valor predeterminado en el archivo cert.conf.
+
+Generando ssl para Localhost 
+5. Instala el certificado en windows
+Después de eso, verás la carpeta «site.test» creada en C:\xampp\apache\crt. En esa carpeta tendremos server.crt y server.key. Este es nuestro certificado SSL.
+
+Haz doble clic en server.crt para instalarlo en Windows para que Windows pueda confiar en él. (Da igual si es windows 7 o Windows 10)
+
+
+Y luego selecciona Equipo local como Ubicación del almacenamiento. (en algunos equipos no aparece la siguiente ventana, pasas a la siguiente)
+
+
+Y luego selecciona «Colocar todos los certificados en el siguiente almacén» y haz clic en Examinar y selecciona Entidades de certificación raiz de confianza.
+
+
+Haz clic en Siguiente y finalizar.
+
+Y ahora este certificado está instalado y es de confianza en Windows. Puedes hacer esto con todos los dominios de prueba que necesites tener en local con ssl.
+
+A continuación, se explica cómo usar este certificado en XAMPP.
+
+6. Agrega el sitio en hosts de Windows
+Abre el bloc de notas (o cualquier editor de texto plano) como administrador.
+Edita C:\Windows\System32\drivers\etc\hosts (el archivo no tiene extensión)
+Agrega esto en una nueva línea:
+127.0.0.1 site.test
+Esto le dirá a Windows que cargue 127.0.0.1, localhost (XAMPP) cuando visitemos https://site.test. Puedes probar y mostrará la página del panel de XAMPP.
+
+En red: Además, puedes configurar estos dominios para una IP de red, por ejemplo 192.168.1.4 y en este caso instale ssl en ambos ordenadores (servidor y cliente).
+
+192.168.1.4 site.test
+7. Agrega el sitio en XAMPP conf.
+Necesitamos habilitar SSL para este dominio y dejar que XAMPP sepa dónde almacenamos el certificado SSL. Entonces necesitamos editar C:\xampp\apache\conf\extra\httpd-xampp.conf
+
+Si estas instalando un servidor local en red, esta configuración será necesaria hacerla en equipo que funciona como servidor y no en los ordenadores cliente (pero en los ordenadores clientes si debes instalar el certificado).
+
+Y agregue este código en la parte inferior:
+
+## site.test
+ <VirtualHost *:80>
+     DocumentRoot "C:/xampp/htdocs"
+     ServerName site.test
+     ServerAlias *.site.test
+ </VirtualHost>
+ <VirtualHost *:443>
+     DocumentRoot "C:/xampp/htdocs"
+     ServerName site.test
+     ServerAlias *.site.test
+     SSLEngine on
+     SSLCertificateFile "crt/site.test/server.crt"
+     SSLCertificateKeyFile "crt/site.test/server.key"
+ </VirtualHost>
+Después de eso, deberás reiniciar Apache en XAMPP. Es muy simple, abre el Panel de control de XAMPP y STOP/START y así se reinicia el módulo Apache.
+
+Consejo: en XAMPP conf, como habrás notado, puedes especificar el directorio raíz del dominio si es necesario. P.ej. como subdirectorio dentro de htdocs.
+
+Así puedes tener varios dominios si lo necesitas
+8. Reinicia tu navegador y listo.
+Esto es necesario para cargar el certificado.
+Ahora puedes visitar el dominio en tu navegador y verás un candado verde.
